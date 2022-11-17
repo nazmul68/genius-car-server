@@ -54,10 +54,20 @@ async function run() {
     });
 
     app.get("/services", async (req, res) => {
-      const query = {}; //find all data
+      const search = req.query.search;
+      // console.log(search);
+
+      let query = {}; //find all data
+
+      if (search.length) {
+        query = {
+          $text: {
+            $search: search,
+          },
+        };
+      }
       // const query = { price: { $gt: 100, $lt: 300 } }; //100<data<300
       // const query = { price: { $eq: 150 } }; // equal = 100
-
       // const query = { price: { $lte: 200 } }
       // const query = { price: { $ne: 150 } }
       // const query = { price: { $in: [20, 40, 150] } }
