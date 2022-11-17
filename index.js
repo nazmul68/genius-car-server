@@ -5,7 +5,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 
 const app = express();
-const port = process.env.PORT || 5001;
+const port = process.env.PORT || 5000;
 
 // middle ware
 app.use(cors());
@@ -22,21 +22,6 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
-// function verifyJWT(req, res, next) {
-//   // console.log(req.headers.authorization);
-//   const authHeader = req.headers.authorization;
-//   if (!authHeader) {
-//     res.status(401).send({ message: "unauthorized access" });
-//   }
-//   const token = authHeader.split(" ")[1]; // important concept
-//   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
-//     if (err) {
-//       res.status(401).send({ message: "unauthorized access" });
-//     }
-//     req.decoded = decoded;
-//     next();
-//   });
-// }
 function verifyJWT(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
@@ -62,7 +47,7 @@ async function run() {
       const user = req.body;
       // console.log(user);
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: "2h",
+        expiresIn: "10h",
       });
 
       res.send({ token });
@@ -70,7 +55,16 @@ async function run() {
 
     app.get("/services", async (req, res) => {
       const query = {}; //find all data
-      const cursor = serviceCollection.find(query);
+      // const query = { price: { $gt: 100, $lt: 300 } }; //100<data<300
+      // const query = { price: { $eq: 150 } }; // equal = 100
+
+      // const query = { price: { $lte: 200 } }
+      // const query = { price: { $ne: 150 } }
+      // const query = { price: { $in: [20, 40, 150] } }
+      // const query = { price: { $nin: [20, 40, 150] } }
+      // const query = { $and: [{price: {$gt: 20}}, {price: {$gt: 100}}] }
+      const order = req.query.order === "asc" ? 1 : -1;
+      const cursor = serviceCollection.find(query).sort({ price: order });
       const services = await cursor.toArray();
       res.send(services);
     });
